@@ -64,3 +64,6 @@ fastlane/test_output
 build/
 
 .DS_Store
+# Foqos for Mac (native macOS port) Xcode cruft
+Foqos - macOS/*.xcodeproj/xcuserdata/
+Foqos - macOS/*.xcodeproj/project.xcworkspace/xcuserdata/
