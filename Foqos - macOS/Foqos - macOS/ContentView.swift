@@ -6,6 +6,9 @@ struct ContentView: View {
     @State private var selectedProfileID: UUID?
     @State private var showingAddProfile = false
     @State private var showingTemplates = false
+    @State private var hostsBlockedCount = 0
+    @State private var hostsBackupExists = false
+    @State private var showingClearConfirm = false
 
     var body: some View {
         NavigationSplitView {
@@ -215,14 +218,65 @@ struct ContentView: View {
                 Text("Foqos adds a clearly marked block to /etc/hosts while a focus session is active.")
                     .foregroundStyle(.secondary)
             }
+            Section("Blocking status") {
+                LabeledContent("Hosts file") {
+                    if hostsBlockedCount > 0 {
+                        Label("\(hostsBlockedCount) sites blocked", systemImage: "shield.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Text("Nothing blocked").foregroundStyle(.secondary)
+                    }
+                }
+                if hostsBlockedCount > 0 {
+                    if store.isSessionActive {
+                        Text("A session is running. Stop it from Home or the menu bar to unblock.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("Foqos found a block in /etc/hosts but no session is running.")
+                            .foregroundStyle(.orange)
+                        Button("Clear block…", role: .destructive) { showingClearConfirm = true }
+                    }
+                }
+                LabeledContent("Original hosts backup") {
+                    Text(hostsBackupExists ? "Saved" : "Not created yet").foregroundStyle(.secondary)
+                }
+                Button("Refresh") { refreshBlockStatus() }
+            }
             Section("Safety") {
-                Text("Stopping a session removes only the block created by Foqos. Existing hosts entries are preserved.")
+                Text("Stopping a session removes only the block created by Foqos. Existing hosts entries are preserved. The first write saves your original hosts file to /etc/hosts.foqos.bak.")
                     .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
         .padding(20)
         .frame(maxWidth: 650, alignment: .leading)
+        .onAppear { refreshBlockStatus() }
+        .onChange(of: store.isSessionActive) { refreshBlockStatus() }
+        .confirmationDialog(
+            "Remove Foqos's block from /etc/hosts?",
+            isPresented: $showingClearConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Clear block", role: .destructive) { clearBlock() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Only the Foqos section is removed. You'll be asked for your password.")
+        }
+    }
+
+    private func refreshBlockStatus() {
+        hostsBlockedCount = HostsManager.shared.getCurrentlyBlockedDomains().count
+        hostsBackupExists = FileManager.default.fileExists(atPath: "/etc/hosts.foqos.bak")
+    }
+
+    private func clearBlock() {
+        do {
+            try HostsManager.shared.removeBlocking()
+            store.staleBlockDetected = false
+        } catch {
+            store.errorMessage = error.localizedDescription
+        }
+        refreshBlockStatus()
     }
 }
 

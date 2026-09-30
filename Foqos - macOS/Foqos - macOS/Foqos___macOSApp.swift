@@ -8,14 +8,19 @@ import SwiftUI
 @main
 struct Foqos_macOSApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @StateObject private var store = ProfileStore.shared
 
     var body: some Scene {
         WindowGroup(id: "main") {
             ContentView()
         }
 
-        MenuBarExtra("Foqos", systemImage: "shield.fill") {
+        // Outline shield when idle, filled shield while a session is blocking.
+        MenuBarExtra {
             MenuBarView()
+        } label: {
+            Image(systemName: store.isSessionActive ? "shield.fill" : "shield")
+                .accessibilityLabel(store.isSessionActive ? "Foqos: blocking" : "Foqos: idle")
         }
     }
 }
