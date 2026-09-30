@@ -131,6 +131,74 @@ Foqos is iOS-only. Android users looking for a similar physical app blocker can 
 
 ## Development
 
+### macOS MVP Handoff
+
+> **Instructions for the next agent:**
+> Read this entire section before touching any macOS code. When you finish a session, update this section with: what you changed, any bugs you fixed, and the revised next steps. Always leave this document in a state where the agent after you can pick up immediately without asking the user to re-explain the project.
+
+There is a separate macOS MVP under `Foqos - macOS/`. This is a local SwiftUI app inspired by the iOS app; it is not part of the iOS target and does not use Screen Time APIs.
+
+#### Current location and build
+
+- Project: `Foqos - macOS/Foqos - macOS.xcodeproj`
+- Sources: `Foqos - macOS/Foqos - macOS/`
+- Desktop app: `~/Desktop/Foqos.app`
+- Build command:
+
+```bash
+cd "Foqos - macOS"
+xcodebuild -project "Foqos - macOS.xcodeproj" \
+  -scheme "Foqos - macOS" \
+  -configuration Debug \
+  -sdk macosx \
+  -derivedDataPath /tmp/FoqosMacBuild \
+  CODE_SIGNING_ALLOWED=NO build
+```
+
+The current MVP includes a SwiftUI dashboard, menu-bar controls, profiles, preset templates, a categorized popular-domain checkbox picker, custom domains, session history, a month-style session calendar, and the Foqos iOS logo as the macOS app icon.
+
+**Bugs fixed in the last session (2026-08-03):**
+- DNS flush was a separate `osascript` call, causing two password dialogs per start/stop — now merged into one combined shell command so only one dialog appears
+- Profiles persisted with `isActive = true` were loaded back as "active" after a crash/relaunch — startup now resets all `isActive` flags
+- No guard against starting a second session while one was already running (easily triggered from the menu bar) — `startSession` now exits immediately if a session is active
+- Settings tab existed in the detail view switch but was unreachable — added to the sidebar nav
+- Calendar day numbers were unreadable on filled (session) circles — session days now render white text
+- "Last 30 days" session count stat ignored calendar month navigation — first metric now updates to show the count for whichever month is displayed in the calendar
+
+**Bugs fixed in session 2026-08-13:**
+- Quitting with a session running left the block in `/etc/hosts` and lost the session. An `AppDelegate` now intercepts quit with Stop Blocking and Quit / Keep Blocking and Quit / Cancel.
+- The active session was memory-only. It's now saved to `active-session.json`, and `ProfileStore.restoreActiveSession()` reconciles it with `/etc/hosts` on launch: it resumes, shows the stale-block alert, or archives the orphaned session to history.
+- `stopSession()` ended the session even when the unblock failed (for example a dismissed password prompt), so the UI said "nothing blocked" while the block was still active. It now keeps the session running if `removeBlocking()` throws.
+- Deleting the selected profile showed the "create your first profile" empty state. `ContentView.resolvedProfile` now falls back to the first profile.
+- The add-domain alert silently dropped invalid input, because an alert can't re-present itself from its own button. It's been replaced with `AddDomainSheet`, which validates live and catches `https://` and paths.
+- There was no way to remove a domain, since `.onDelete` does nothing on macOS here. Each row now has a hover minus button and a right-click Remove option.
+- The live timer counted ticks and lost time during sleep. It's now derived from `startTime`.
+- The session tracker was rebuilt. Days are shaded by minutes focused (5-step green scale plus legend), there are Today / Month / Streak / All-time tiles and a ring on today, the running session counts live, and every stat is bucketed by start date.
+
+#### macOS blocking safety
+
+`HostsManager.swift` writes only a clearly marked section between `# >>> FOQOS BLOCK START <<<` and `# >>> FOQOS BLOCK END <<<` in `/etc/hosts`. Starting a session removes any previous Foqos section and writes the selected domains; stopping removes only that section. Existing non-Foqos hosts entries are preserved. macOS asks for administrator credentials through `osascript` when the file is changed.
+
+Profiles and completed sessions are stored locally as JSON under `~/Library/Application Support/Foqos-macOS/`. The current macOS target intentionally has App Sandbox disabled because it needs to launch the privileged `/etc/hosts` write flow.
+
+#### Next macOS work
+
+1. **Make the current state visible.** The menu bar icon is always `shield.fill` and should change when a session is active. Settings should show the live `/etc/hosts` block status with a Clear button, because the stale-block alert fires only once.
+2. **HostsManager hardening:**
+   - Back up `/etc/hosts` before writing.
+   - Check marker order. `getCurrentlyBlockedDomains` crashes if END comes before START, and `removeExistingFoqosBlock` strips only the first pair.
+   - Make `isValidDomain` ASCII-only with punycode for IDNs. `Character.isLetter` accepts Unicode, and empty labels are silently dropped.
+   - Quote the temp path in the `do shell script` string.
+3. Small cleanup:
+   - Derive `profile.isActive` from `activeProfileId` instead of storing both.
+   - Read the version from the bundle instead of hardcoding "1.0".
+   - Remove the no-op `flushDNSCache()`.
+4. Known limitation, which Milo accepts for now: `/etc/hosts` can't wildcard (for example `*.googlevideo.com`) and doesn't affect tabs that were already open, so a cached YouTube tab can still play videos. A real fix would need an `NEFilterDataProvider` network extension.
+5. **App blocking (next big feature):** Use `NSWorkspace.shared.notificationCenter` to observe `NSWorkspace.didActivateApplicationNotification` and immediately call `.terminate()` on any app whose bundle ID is in the profile's blocked list. This is how [AppJail](https://github.com/devsemih/appjail) works — no special entitlements needed, works on any Mac, no Family Sharing required. **Do NOT attempt the Screen Time / FamilyControls API** — `FamilyActivityPicker` is iOS-only, `ManagedSettings` app shielding requires Mac Catalyst (not a native macOS target), and it requires Family Sharing guardian approval which makes it unsuitable for self-blocking.
+6. Make the month calendar interactive — tap a day to see session details for that date.
+7. Keep the popular-domain catalog current and consider adding more services (LinkedIn, Hulu, Spotify, etc.).
+8. Add macOS unit tests for domain validation, hosts-marker cleanup, calendar aggregation, and profile persistence.
+
 ### Prerequisites
 
 - Xcode 15.0+
