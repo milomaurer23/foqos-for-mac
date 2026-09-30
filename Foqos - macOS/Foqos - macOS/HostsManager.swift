@@ -14,6 +14,7 @@ class HostsManager {
     private let hostsPath = "/etc/hosts"
     private let beginMarker = "# >>> FOQOS BLOCK START <<<"
     private let endMarker = "# >>> FOQOS BLOCK END <<<"
+    private let backupPath = "/etc/hosts.foqos.bak"
 
     private init() {}
 
@@ -56,14 +57,18 @@ class HostsManager {
         return content.contains(beginMarker)
     }
 
+    /// ASCII hostnames only (letters, digits, hyphens) with no empty labels.
+    /// Also the guard that keeps stray characters out of /etc/hosts.
     static func isValidDomain(_ domain: String) -> Bool {
-        let parts = domain.split(separator: ".", omittingEmptySubsequences: true)
-        guard parts.count >= 2, domain.count <= 253 else { return false }
+        guard domain.count <= 253 else { return false }
+        let parts = domain.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count >= 2 else { return false }
         return parts.allSatisfy { part in
+            !part.isEmpty &&
             part.count <= 63 &&
             part.first != "-" &&
             part.last != "-" &&
-            part.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" }
+            part.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") }
         }
     }
 
@@ -71,12 +76,9 @@ class HostsManager {
     func getCurrentlyBlockedDomains() -> [String] {
         guard let content = try? readHostsFile() else { return [] }
 
-        guard let startRange = content.range(of: beginMarker),
-              let endRange = content.range(of: endMarker) else {
-            return []
-        }
+        guard let blockRange = nextBlockRange(in: content) else { return [] }
 
-        let blockSection = String(content[startRange.upperBound..<endRange.lowerBound])
+        let blockSection = String(content[blockRange])
         return blockSection
             .components(separatedBy: .newlines)
             .compactMap { line -> String? in
@@ -99,8 +101,15 @@ class HostsManager {
         let tempPath = NSTemporaryDirectory() + "foqos_hosts_\(UUID().uuidString)"
         try content.write(toFile: tempPath, atomically: true, encoding: .utf8)
 
+        // The whole write is one && chain, so the exit status reflects a failed copy.
+        // Only the cache flush is allowed to fail quietly (it ends in `true`).
+        // The one-time backup keeps the user's original hosts file recoverable.
+        let escapedPath = tempPath
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
         let script = """
-        do shell script "cp \(tempPath) /etc/hosts && chmod 644 /etc/hosts && rm -f \(tempPath) && dscacheutil -flushcache; killall -HUP mDNSResponder" with administrator privileges
+        set tempFile to "\(escapedPath)"
+        do shell script "( [ -f \(backupPath) ] || cp \(hostsPath) \(backupPath) ) && cp " & quoted form of tempFile & " \(hostsPath) && chmod 644 \(hostsPath) && { dscacheutil -flushcache; killall -HUP mDNSResponder; true; }" with administrator privileges
         """
 
         let process = Process()
@@ -125,28 +134,18 @@ class HostsManager {
             }
             throw HostsManagerError.writeFailed(errorString)
         }
+
+        // Confirm the write landed instead of trusting the exit status alone.
+        guard let written = try? readHostsFile(), written == content else {
+            throw HostsManagerError.writeFailed("/etc/hosts does not match what Foqos wrote.")
+        }
     }
 
     private func removeExistingFoqosBlock(from content: String) -> String {
-        guard let startRange = content.range(of: beginMarker),
-              let endRange = content.range(of: endMarker) else {
-            return content
-        }
-
-        // Find the start of the line containing beginMarker
-        var blockStart = startRange.lowerBound
-        while blockStart > content.startIndex {
-            let prevIndex = content.index(before: blockStart)
-            if content[prevIndex] == "\n" {
-                break
-            }
-            blockStart = prevIndex
-        }
-
-        let blockEnd = endRange.upperBound
-        var result = String(content[content.startIndex..<blockStart])
-        if blockEnd < content.endIndex {
-            result += String(content[blockEnd...])
+        var result = content
+        // Loop so a duplicated block (from an earlier bug or a manual edit) is fully cleared.
+        while let blockRange = nextBlockRange(in: result) {
+            result.removeSubrange(blockRange)
         }
 
         // Clean up extra blank lines
@@ -157,11 +156,38 @@ class HostsManager {
         return result
     }
 
+    /// Range of the first Foqos block, whole lines from the start marker through the end marker.
+    /// The end marker must come after the start marker. If it's missing (a half-written block),
+    /// the range covers the start marker and the Foqos-generated lines right after it, and stops
+    /// at the first line that isn't ours.
+    private func nextBlockRange(in content: String) -> Range<String.Index>? {
+        guard let startRange = content.range(of: beginMarker) else { return nil }
+        let lineStart = content.lineRange(for: startRange).lowerBound
+
+        if let endRange = content.range(of: endMarker, range: startRange.upperBound..<content.endIndex) {
+            return lineStart..<content.lineRange(for: endRange).upperBound
+        }
+
+        var end = content.lineRange(for: startRange).upperBound
+        while end < content.endIndex {
+            let lineRange = content.lineRange(for: end..<end)
+            let line = content[lineRange].trimmingCharacters(in: .whitespacesAndNewlines)
+            let isFoqosLine = line.isEmpty
+                || line.hasPrefix("0.0.0.0 ")
+                || line.hasPrefix("# Blocked by Foqos")
+                || line.hasPrefix("# Active since:")
+            guard isFoqosLine else { break }
+            end = lineRange.upperBound
+        }
+        return lineStart..<end
+    }
+
     private func buildBlockEntries(for domains: [String]) -> String {
         var entries = "# Blocked by Foqos — do not edit manually\n"
         entries += "# Active since: \(ISO8601DateFormatter().string(from: Date()))\n"
 
-        for domain in domains {
+        // Never write a line that could inject extra hosts entries.
+        for domain in domains where Self.isValidDomain(domain) {
             entries += "0.0.0.0 \(domain)\n"
         }
 
