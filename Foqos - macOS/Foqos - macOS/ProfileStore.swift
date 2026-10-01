@@ -46,12 +46,18 @@ class ProfileStore: ObservableObject {
         let blockIsActive = HostsManager.shared.isBlockingActive()
         let savedSession = loadActiveSession()
 
+        // A session with no sites, only blocked apps, never writes to /etc/hosts. It is still
+        // legitimate, so it resumes without needing a hosts block to agree with it.
+        let savedAppIDs = savedSession?.blockedAppBundleIDs ?? []
+        let isAppOnlySession = (savedSession?.blockedDomainCount ?? 1) == 0 && !savedAppIDs.isEmpty
+
         switch (blockIsActive, savedSession) {
-        case (true, .some(let session)):
+        case (_, .some(let session)) where blockIsActive || isAppOnlySession:
             // Block and session agree — pick the session back up where it left off.
             activeSession = session
             activeProfileId = session.profileId
             markProfileActive(session.profileId)
+            AppBlocker.shared.start(bundleIDs: savedAppIDs)
             startTimer()
 
         case (true, .none):
@@ -59,7 +65,7 @@ class ProfileStore: ObservableObject {
             markProfileActive(nil)
             staleBlockDetected = true
 
-        case (false, .some(let session)):
+        case (_, .some(let session)):
             // The block is gone but the session was never closed out. Archive it so the
             // time isn't lost, then start clean.
             var finished = session
@@ -130,15 +136,21 @@ class ProfileStore: ObservableObject {
         guard let profile = profiles.first(where: { $0.id == profileId }) else { return }
 
         let enabledDomains = profile.blockedDomains.filter { $0.isEnabled }.map { $0.domain }
+        let enabledAppIDs = profile.blockedApps
+            .filter { $0.isEnabled && !AppBlocker.isProtected($0.bundleID) }
+            .map { $0.bundleID }
 
-        do {
-            try HostsManager.shared.applyBlocking(domains: enabledDomains)
-        } catch HostsManagerError.userCancelled {
-            errorMessage = HostsManagerError.userCancelled.localizedDescription
-            return
-        } catch {
-            errorMessage = error.localizedDescription
-            return
+        // Only touch /etc/hosts (and ask for the password) when there are sites to block.
+        if !enabledDomains.isEmpty {
+            do {
+                try HostsManager.shared.applyBlocking(domains: enabledDomains)
+            } catch HostsManagerError.userCancelled {
+                errorMessage = HostsManagerError.userCancelled.localizedDescription
+                return
+            } catch {
+                errorMessage = error.localizedDescription
+                return
+            }
         }
 
         let session = FocusSession(
@@ -146,12 +158,14 @@ class ProfileStore: ObservableObject {
             profileId: profileId,
             profileName: profile.name,
             startTime: Date(),
-            blockedDomainCount: enabledDomains.count
+            blockedDomainCount: enabledDomains.count,
+            blockedAppBundleIDs: enabledAppIDs
         )
 
         activeSession = session
         activeProfileId = profileId
         saveActiveSession(session)
+        AppBlocker.shared.start(bundleIDs: enabledAppIDs)
 
         // Mark profile as active
         if let index = profiles.firstIndex(where: { $0.id == profileId }) {
@@ -168,18 +182,23 @@ class ProfileStore: ObservableObject {
     /// unblocked something it didn't.
     func stopSession() {
         guard let session = activeSession else {
+            AppBlocker.shared.stop()
             stopTimer()
             markProfileActive(nil)
             return
         }
 
-        do {
-            try HostsManager.shared.removeBlocking()
-        } catch {
-            errorMessage = error.localizedDescription
-            return
+        // Skip the password prompt when there is no hosts block to lift (an apps-only session).
+        if HostsManager.shared.isBlockingActive() {
+            do {
+                try HostsManager.shared.removeBlocking()
+            } catch {
+                errorMessage = error.localizedDescription
+                return
+            }
         }
 
+        AppBlocker.shared.stop()
         stopTimer()
 
         var finished = session

@@ -136,6 +136,24 @@ enum DomainCategory: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Blocked App
+
+/// A native app that gets quit while a session runs. Matched by bundle identifier, so
+/// renaming or moving the app doesn't break it.
+struct BlockedApp: Identifiable, Codable, Hashable {
+    let id: UUID
+    var name: String
+    var bundleID: String
+    var isEnabled: Bool
+
+    init(id: UUID = UUID(), name: String, bundleID: String, isEnabled: Bool = true) {
+        self.id = id
+        self.name = name
+        self.bundleID = bundleID
+        self.isEnabled = isEnabled
+    }
+}
+
 // MARK: - Focus Profile
 
 struct FocusProfile: Identifiable, Codable {
@@ -144,6 +162,7 @@ struct FocusProfile: Identifiable, Codable {
     var icon: String
     var colorHex: String
     var blockedDomains: [BlockedDomain]
+    var blockedApps: [BlockedApp]
     var isActive: Bool
     var createdAt: Date
     var totalSessionSeconds: Int
@@ -155,6 +174,7 @@ struct FocusProfile: Identifiable, Codable {
         icon: String = "shield.checkered",
         colorHex: String = "894fa3",
         blockedDomains: [BlockedDomain] = [],
+        blockedApps: [BlockedApp] = [],
         isActive: Bool = false,
         createdAt: Date = Date(),
         totalSessionSeconds: Int = 0,
@@ -165,10 +185,31 @@ struct FocusProfile: Identifiable, Codable {
         self.icon = icon
         self.colorHex = colorHex
         self.blockedDomains = blockedDomains
+        self.blockedApps = blockedApps
         self.isActive = isActive
         self.createdAt = createdAt
         self.totalSessionSeconds = totalSessionSeconds
         self.sessionCount = sessionCount
+    }
+
+    /// Profiles saved before app blocking existed have no `blockedApps` key.
+    /// Default it to empty so they still load instead of being dropped.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        icon = try c.decode(String.self, forKey: .icon)
+        colorHex = try c.decode(String.self, forKey: .colorHex)
+        blockedDomains = try c.decode([BlockedDomain].self, forKey: .blockedDomains)
+        blockedApps = try c.decodeIfPresent([BlockedApp].self, forKey: .blockedApps) ?? []
+        isActive = try c.decode(Bool.self, forKey: .isActive)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        totalSessionSeconds = try c.decode(Int.self, forKey: .totalSessionSeconds)
+        sessionCount = try c.decode(Int.self, forKey: .sessionCount)
+    }
+
+    var enabledAppCount: Int {
+        blockedApps.filter { $0.isEnabled }.count
     }
 
     var color: Color {
@@ -198,6 +239,8 @@ struct FocusSession: Identifiable, Codable {
     var startTime: Date
     var endTime: Date?
     var blockedDomainCount: Int
+    /// Apps quit during this session. Optional so sessions saved before app blocking still decode.
+    var blockedAppBundleIDs: [String]?
 
     var isActive: Bool {
         endTime == nil

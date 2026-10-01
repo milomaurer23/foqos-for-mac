@@ -37,6 +37,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Your blocked sites will stay blocked unless you stop the session first.
 
             If you keep blocking, Foqos picks the session back up the next time you open it.
+
+            Blocked apps are only quit while Foqos is open.
             """
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Stop Blocking and Quit")
