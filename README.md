@@ -5,9 +5,11 @@
 <h1 align="center">Foqos for Mac</h1>
 
 <p align="center">
-  A Mac version of <a href="https://github.com/awaseem/foqos"><b>Foqos</b></a>, the free, open-source focus app created by <a href="https://github.com/awaseem"><b>Ali Waseem</b></a>.<br>
-  All credit for Foqos, its idea and its iPhone app goes to Ali.
+  Mac version by <a href="https://github.com/milomaurer23"><b>Milo Maurer</b></a> · based on <a href="https://github.com/awaseem/foqos"><b>Foqos</b></a> by <a href="https://github.com/awaseem"><b>Ali Waseem</b></a>
 </p>
+
+> [!NOTE]
+> **Foqos was created by [Ali Waseem](https://github.com/awaseem).** The idea, the name and the original iPhone app are all his: [github.com/awaseem/foqos](https://github.com/awaseem/foqos). I'm not affiliated with Ali or the official app. This is my own personal project to bring Foqos to the Mac.
 
 <p align="center">
   <img src="./docs/screenshots/home.png" width="860" alt="Foqos for Mac home screen with the focus tracker">
@@ -16,6 +18,8 @@
 ## Why I made this
 
 I've used and enjoyed Foqos on my phone for a while. Most of my actual work happens on my computer, though, and that's where I lose the most time to a stray tab. I wanted the same kind of focus session on my Mac, so I built one. This is me filling that gap for myself, not a replacement for the original.
+
+Milo
 
 ## What it does
 
