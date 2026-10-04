@@ -71,6 +71,8 @@ xcodebuild -project "Foqos - macOS.xcodeproj" \
 
 **2026-10-04**
 - `WindowGroup` has `.defaultSize(width: 1100, height: 780)`, so a first launch shows the whole tracker
+- Ali Waseem is credited in the app: a Credits section at the top of Settings (links to his repo and the App Store) and a footer line on Home (`FoqosCreditLine` in `ContentView.swift`)
+- README screenshots live in `docs/screenshots/` and use sample data, not real history
 - The README was rewritten for the Mac app. The original iOS README moved to `docs/IOS_README.md`, and this handoff moved out of the README
 
 ## Next steps
