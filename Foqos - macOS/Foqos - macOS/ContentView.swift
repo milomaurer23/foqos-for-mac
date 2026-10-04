@@ -131,6 +131,9 @@ struct ContentView: View {
 
                     }
                 }
+
+                FoqosCreditLine()
+                    .padding(.top, 8)
             }
             .padding(32)
             .frame(maxWidth: 900, alignment: .leading)
@@ -213,6 +216,21 @@ struct ContentView: View {
 
     private var settingsView: some View {
         Form {
+            Section("Credits") {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Foqos was created by Ali Waseem.")
+                        .font(.headline)
+                    Text("Foqos for Mac is a personal Mac version of his free, open-source iPhone app. The idea, the name and the original app are his.")
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+                Link(destination: FoqosCredit.originalRepo) {
+                    Label("Ali's original Foqos on GitHub", systemImage: "arrow.up.right.square")
+                }
+                Link(destination: FoqosCredit.appStore) {
+                    Label("Foqos for iPhone on the App Store", systemImage: "arrow.up.right.square")
+                }
+            }
             Section("About") {
                 LabeledContent("Version", value: "1.0")
                 Text("Foqos adds a clearly marked block to /etc/hosts while a focus session is active.")
@@ -694,5 +712,25 @@ private struct TrackerMetric: View {
         .overlay(
             RoundedRectangle(cornerRadius: 10).stroke(tint.opacity(0.25), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Credit
+
+/// Foqos is Ali Waseem's app. This Mac version credits him wherever it introduces itself.
+enum FoqosCredit {
+    static let originalRepo = URL(string: "https://github.com/awaseem/foqos")!
+    static let appStore = URL(string: "https://apps.apple.com/ca/app/foqos/id6736793117")!
+}
+
+private struct FoqosCreditLine: View {
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("Based on Foqos by Ali Waseem.")
+            Link("View the original on GitHub", destination: FoqosCredit.originalRepo)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 }
