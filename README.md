@@ -12,6 +12,11 @@
 > **Foqos was created by [Ali Waseem](https://github.com/awaseem).** The idea, the name and the original iPhone app are all his: [github.com/awaseem/foqos](https://github.com/awaseem/foqos). I'm not affiliated with Ali or the official app. This is my own personal project to bring Foqos to the Mac.
 
 <p align="center">
+  <a href="https://github.com/milomaurer23/foqos-for-mac/releases/latest"><b>⬇ Download Foqos for Mac</b></a><br>
+  <sub>Free · macOS 14 or later · Apple Silicon and Intel</sub>
+</p>
+
+<p align="center">
   <img src="./docs/screenshots/home.png" width="860" alt="Foqos for Mac home screen with the focus tracker">
 </p>
 
@@ -48,9 +53,19 @@ Sites are blocked by adding a clearly marked section to `/etc/hosts`, so macOS a
 
 It's a roadblock, not a jail. A tab that was already open before the session started can keep working until you close it.
 
-## Build it
+## Install
 
-There's no download yet. To build it yourself you need Xcode 26.5 or later and macOS 26.3 or later.
+1. [Download the latest `.zip`](https://github.com/milomaurer23/foqos-for-mac/releases/latest) and double-click it to unzip.
+2. Drag **Foqos.app** into your **Applications** folder.
+3. **The first time you open it,** macOS will warn that it can't verify the app. That's because this is a free personal project and isn't signed through Apple's paid developer program yet. To open it anyway:
+   - **macOS 15 or later:** double-click Foqos, click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+   - **macOS 14:** right-click Foqos, choose **Open**, then click **Open** again.
+
+You only have to do this once. You'll need to be an admin on your Mac, because blocking sites asks for your password.
+
+## Build it yourself
+
+You need Xcode 26.5 or later.
 
 ```bash
 git clone https://github.com/milomaurer23/foqos-for-mac.git

@@ -232,7 +232,7 @@ struct ContentView: View {
                 }
             }
             Section("About") {
-                LabeledContent("Version", value: "1.0")
+                LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
                 Text("Foqos adds a clearly marked block to /etc/hosts while a focus session is active.")
                     .foregroundStyle(.secondary)
             }

@@ -74,17 +74,35 @@ xcodebuild -project "Foqos - macOS.xcodeproj" \
 - Ali Waseem is credited in the app: a Credits section at the top of Settings (links to his repo and the App Store) and a footer line on Home (`FoqosCreditLine` in `ContentView.swift`)
 - README screenshots live in `docs/screenshots/` and use sample data, not real history
 - The README was rewritten for the Mac app. The original iOS README moved to `docs/IOS_README.md`, and this handoff moved out of the README
+- First public release, **v0.1.0**, on GitHub Releases. The minimum macOS dropped from 26.3 to **14.0** (it compiles clean; it's only been run on macOS 26). `MARKETING_VERSION` is 0.1.0, and Settings reads the version from the bundle
+
+## Making a release
+
+The app is ad-hoc signed, not notarized (Milo has no paid Apple Developer Program membership yet), so users go through "Open Anyway" once. Apple Silicon refuses to run a completely unsigned binary, so the ad-hoc signature is required.
+
+```bash
+cd "Foqos - macOS"
+xcodebuild -project "Foqos - macOS.xcodeproj" -scheme "Foqos - macOS" -configuration Release \
+  -sdk macosx -derivedDataPath /tmp/FoqosMacRelease ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+  CODE_SIGNING_ALLOWED=NO build
+ditto "/tmp/FoqosMacRelease/Build/Products/Release/Foqos - macOS.app" /tmp/release/Foqos.app
+codesign --force --deep --sign - /tmp/release/Foqos.app
+cd /tmp/release && ditto -c -k --sequesterRsrc --keepParent Foqos.app Foqos-for-Mac-X.Y.Z.zip
+gh release create vX.Y.Z Foqos-for-Mac-X.Y.Z.zip --repo milomaurer23/foqos-for-mac
+```
+
+Bump `MARKETING_VERSION` in the pbxproj (both configs) first.
 
 ## Next steps
 
-1. **Small cleanup:**
-   - Read the version from the bundle instead of the hardcoded `"1.0"` in `ContentView.swift`
+1. **Notarized releases** once Milo joins the Apple Developer Program: create a Developer ID Application certificate, sign with hardened runtime, `xcrun notarytool submit`, staple, and ship a `.dmg`. This removes the "Open Anyway" step.
+2. **Test on macOS 14 and 15.** The deployment target is 14.0, but the app has only been run on macOS 26.
+3. **Small cleanup:**
    - Remove the no-op `flushDNSCache()` in `HostsManager.swift`
    - Derive `profile.isActive` from `activeProfileId` instead of storing both
-2. **Distribution:** sign, notarize and publish a release `.app` so people don't have to build from source.
-3. Make the month calendar interactive: click a day to see that day's sessions.
-4. Keep the popular-domain catalog current (LinkedIn, Hulu, Spotify and so on).
-5. Add macOS unit tests for domain validation, hosts-marker parsing, calendar aggregation and profile persistence.
-6. Known limitation that Milo accepts for now: `/etc/hosts` can't wildcard (for example `*.googlevideo.com`) and doesn't affect tabs that were already open, so a cached YouTube tab can still play videos. A real fix needs an `NEFilterDataProvider` network extension.
+4. Make the month calendar interactive: click a day to see that day's sessions.
+5. Keep the popular-domain catalog current (LinkedIn, Hulu, Spotify and so on).
+6. Add macOS unit tests for domain validation, hosts-marker parsing, calendar aggregation and profile persistence.
+7. Known limitation that Milo accepts for now: `/etc/hosts` can't wildcard (for example `*.googlevideo.com`) and doesn't affect tabs that were already open, so a cached YouTube tab can still play videos. A real fix needs an `NEFilterDataProvider` network extension.
 
 **Don't** attempt the Screen Time / FamilyControls APIs on macOS. `FamilyActivityPicker` is iOS-only, `ManagedSettings` app shielding needs Mac Catalyst, and it requires Family Sharing guardian approval, which rules out self-blocking.
