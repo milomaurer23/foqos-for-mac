@@ -1,301 +1,92 @@
 <p align="center">
-  <img src="./images/foqos-logo.png" width="250" style="border-radius: 40px;" alt="Foqos app icon">
+  <img src="./images/foqos-logo.png" width="140" alt="Foqos app icon">
 </p>
 
-<h1 align="center"><a href="https://apps.apple.com/ca/app/foqos/id6736793117">Foqos</a></h1>
+<h1 align="center">Foqos for Mac</h1>
 
 <p align="center">
-  <strong>Free, open-source iPhone app blocker with NFC and QR code unlocking.</strong>
-</p>
-
-<p align="center">
-  Foqos is a privacy-first iOS app blocker that uses Apple's Screen Time API to block distracting apps and websites. Start a focus session manually, with an NFC tag, with a QR code or barcode, with a timer, or with temporary access rules. It is built as a free and open-source alternative to Brick, Unpluq, Blok, Opal, and other paid app blockers for iPhone.
+  <strong>A native macOS focus blocker. Pick a profile, press start, and the sites and apps that eat your afternoon are gone until you stop.</strong>
 </p>
 
 <p align="center">
-  <a href="https://www.foqos.app/">Website</a> |
-  <a href="https://apps.apple.com/ca/app/foqos/id6736793117">App Store</a> |
-  <a href="https://github.com/awaseem/foqos/releases">Releases</a> |
-  <a href="https://coff.ee/ambitionsoftware">Support the project</a>
+  SwiftUI · macOS 26.3+ · free and open source · no account, no tracking
+</p>
+
+<p align="center">
+  <img src="./docs/screenshots/home.png" width="860" alt="Foqos for Mac home screen with the focus tracker">
 </p>
 
 ---
 
-## What Foqos Does
+## Why I built it
 
-Foqos helps you put friction between yourself and the apps or websites you want to avoid. You create blocking profiles for work, study, bedtime, or any other routine, choose the apps and domains to block, then decide how that profile starts and stops.
+I use [Foqos](https://github.com/awaseem/foqos) on my iPhone and wanted the same thing on the computer I actually work on. The iOS app relies on Apple's Screen Time APIs, which can't do self-blocking on a Mac, so this is a separate native app built a different way: a marked block in `/etc/hosts` for sites, and an app watcher that quits blocked apps.
 
-Unlike hardware-first blockers, Foqos works with cheap NFC tags, printable QR codes, barcodes, iOS Shortcuts, and in-app controls. Your data stays on your device. There is no account requirement, no tracking, no ads, and no subscription.
+## What it does
 
-## Free Alternative to Brick, Unpluq, Blok, and Opal
+- **Profiles for different modes.** Deep Work, Study Mode, Bedtime, or your own, each with its own sites, apps, icon and color. Start from a preset or from scratch.
+- **Blocks websites.** Choose from a checklist of popular sites, or add any domain. Typing `https://` or a path gets caught before it's saved.
+- **Quits distracting apps.** Add apps to a profile, and they're asked to quit as soon as they open during a session. Finder, the Dock and Foqos itself can never be blocked.
+- **One click from the menu bar.** The shield is an outline when you're free and filled while you're blocking.
+- **A focus tracker you can read at a glance.** Each day is shaded by how long you focused, not how many times you pressed start. Tiles show today, the month, your streak and all-time, and the running session counts live.
+- **Hard to lose track of.** Quitting mid-session asks whether to stop or keep blocking. If the app quits unexpectedly, the session picks back up on relaunch, and Settings always shows whether a block is active, with a button to clear it.
 
-Foqos is built for people who want physical app blocking on iPhone without buying a dedicated device or paying for a subscription. It covers the core workflows people often look for in a Brick alternative, Unpluq alternative, Blok alternative, or Opal alternative: app blocking, website blocking, NFC unlocks, QR code unlocks, timed focus sessions, and local privacy.
+## Screenshots
 
-Foqos is not affiliated with Brick, Unpluq, Blok, or Opal.
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/screenshots/profile.png" alt="A profile with its blocked sites and apps"><br><sub><b>A profile:</b> blocked sites and apps, each with its own toggle</sub></td>
+    <td width="50%"><img src="./docs/screenshots/history.png" alt="Session history"><br><sub><b>History:</b> every session, newest first, with how long it lasted</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/screenshots/new-profile.png" alt="Creating a new profile"><br><sub><b>New profile:</b> a name, an icon and a color, then add what to block</sub></td>
+    <td width="50%"><img src="./docs/screenshots/settings.png" alt="Settings showing the live hosts block status"><br><sub><b>Settings:</b> live block status and your hosts backup, at a glance</sub></td>
+  </tr>
+</table>
 
-## Features
+## How it works
 
-- App and website blocking through Apple's Screen Time APIs
-- Custom profiles for different routines, schedules, app groups, and domains
-- NFC tag blocking for physical start and stop flows
-- QR code and barcode blocking, including generated profile QR codes
-- Timer-based sessions that end automatically after a chosen duration
-- Physical unlock rules for profiles that should only stop with approved tags or codes
-- Temporary Access strategies for limited, short opens without ending the full session
-- Pause Timer strategies for a short break before blocking resumes
-- Smart breaks, session history, focus streaks, and profile insights
-- Live Activities for Lock Screen and Dynamic Island status
-- Widgets and App Intents for faster profile control
-- Local-first privacy with no cloud sync or analytics
+| | How | What you'll notice |
+|---|---|---|
+| **Sites** | Adds a clearly marked section of `0.0.0.0` entries to `/etc/hosts`, and removes only that section when you stop. A one-time backup is saved to `/etc/hosts.foqos.bak`. | macOS asks for your password when you start and stop a session. |
+| **Apps** | Watches app launches and politely asks blocked apps to quit. | Works only while Foqos is open. No special permissions needed. |
+| **Your data** | Profiles and history are stored as JSON in `~/Library/Application Support/Foqos-macOS/`. | Nothing leaves your Mac. |
 
-## Blocking Strategies
+### Honest limits
 
-Foqos includes several ways to start and stop a blocking session. All strategies are implemented in `Foqos/Models/Strategies/` and registered in `Foqos/Utils/StrategyManager.swift`.
+- **Tabs that are already open can keep working.** `/etc/hosts` only affects new connections, and it can't block wildcards. A YouTube tab that was open before you started can still play cached videos. Close the tab and it's blocked.
+- **This is a roadblock, not a jail.** Someone with your admin password can edit `/etc/hosts`. The point is friction, not lockdown.
+- **No signed download yet.** For now you build it from source.
 
-| Strategy | Best for | How it works |
-| --- | --- | --- |
-| `ManualBlockingStrategy` | Simple in-app blocking | Start and stop directly in Foqos. |
-| `NFCBlockingStrategy` | Physical NFC app blocking | Scan an NFC tag to start. Scan the same tag again to stop, unless strict unlock rules are configured. |
-| `QRCodeBlockingStrategy` | QR code or barcode blocking | Scan a QR code or barcode to start. Scan the same code again to stop, unless strict unlock rules are configured. |
-| `NFCManualBlockingStrategy` | Easy start, physical stop | Start in the app. Stop by scanning an NFC tag. |
-| `QRManualBlockingStrategy` | Easy start, QR or barcode stop | Start in the app. Stop by scanning a QR code or barcode. |
-| `NFCTimerBlockingStrategy` | Timed focus with NFC escape hatch | Choose a duration. Blocking ends when the timer expires, or early when an allowed NFC tag is scanned. |
-| `QRTimerBlockingStrategy` | Timed focus with QR or barcode escape hatch | Choose a duration. Blocking ends when the timer expires, or early when an allowed QR code or barcode is scanned. |
-| `ShortcutTimerBlockingStrategy` | Manual timer sessions | Choose a duration. Stop early with the in-app Stop button. |
-| `NFCPauseTimerBlockingStrategy` | Long sessions with NFC pause control | Choose a pause duration. Scan an NFC tag once to pause, then again during the pause to fully stop. |
-| `QRPauseTimerBlockingStrategy` | Long sessions with QR or barcode pause control | Choose a pause duration. Scan a QR code or barcode once to pause, then again during the pause to fully stop. |
-| `NFCSoftUnblockBlockingStrategy` | Limited temporary access with NFC stop | Keep blocking active but allow a configured number of short opens. Stop the session with an NFC tag. |
-| `QRSoftUnblockBlockingStrategy` | Limited temporary access with QR or barcode stop | Keep blocking active but allow a configured number of short opens. Stop the session with a QR code or barcode. |
+## Build it
 
-Strict unlocks can require specific physical unlock items. When a profile has an approved NFC tag, QR code, or barcode configured, other tags and codes cannot stop that profile.
-
-## How It Works
-
-1. Download Foqos from the [App Store](https://apps.apple.com/ca/app/foqos/id6736793117).
-2. Grant Screen Time access so Foqos can block selected apps and websites.
-3. Create a profile for the apps, categories, and domains you want to block.
-4. Pick a blocking strategy: manual, NFC, QR/barcode, timer, pause timer, or temporary access.
-5. Start the session and let Foqos enforce the block until your chosen stop condition is met.
-
-## Requirements
-
-- iOS 17.6+
-- iPhone with NFC capability for NFC strategies
-- Screen Time permissions for app and website blocking
-- Apple Developer account with the required Screen Time and NFC entitlements for local development
-
-## NFC Tags and QR Codes
-
-Foqos works with common NFC tags such as NTAG213. You can write profile links to NFC tags from inside the app, then place tags where they match the routine: desk, bedside table, gym bag, office door, or another physical location.
-
-QR codes are free to print or display on another device. Each profile can expose a deep link in this format:
-
-```text
-https://foqos.app/profile/<PROFILE_UUID>
-```
-
-Scanning a QR code with that link can toggle the profile. If the profile is inactive, Foqos starts it. If it is active, Foqos stops it when the profile's strategy and unlock rules allow that stop.
-
-## iOS Shortcuts Setup
-
-You can trigger Foqos profiles through iOS Shortcuts. For NFC automations, create one automation per NFC tag.
-
-1. Open the Shortcuts app and go to the Automation tab.
-2. Tap Create Personal Automation and choose NFC.
-3. Scan the NFC tag and name it for the Foqos profile you want to run.
-4. Enable Run Immediately and turn on Notify When Run.
-
-<img width="250" alt="iOS Shortcuts NFC setup screen" src="/images/shortcut-instructions-1.png" />
-
-5. Add a blank automation, search for Foqos, and add Check if Foqos Session is Active. Turn off Show When Run.
-
-<img width="250" alt="iOS Shortcuts action setup" src="/images/shortcut-instructions-2.png" />
-
-6. Add an If block with Start Foqos Profile and Stop Foqos Profile. For both actions, select the target Foqos profile.
-7. Arrange the actions so the profile stops if active and starts if inactive.
-
-<img width="250" alt="iOS Shortcuts If block setup" src="/images/shortcut-instructions-3.png" />
-<img width="250" alt="iOS Shortcuts If block configuration" src="/images/shortcut-instructions-4.png" />
-
-## 3D Printable NFC Accessories
-
-Foqos also has a printable NFC brick and keychain design for 25 mm NFC tags:
-
-- [Foqos NFC Brick and Keychain on Printables](https://www.printables.com/model/1537982-foqos-nfc-brick-keychain)
-
-<img width="500" alt="3D printable Foqos NFC brick and keychain" src="/images/foqos-brick-keychain.png" />
-
-## Android Alternative
-
-Foqos is iOS-only. Android users looking for a similar physical app blocker can try [Switchly](https://switchly.saltyy.at/#features).
-
-## Development
-
-### macOS MVP Handoff
-
-> **Instructions for the next agent:**
-> Read this entire section before touching any macOS code. When you finish a session, update this section with: what you changed, any bugs you fixed, and the revised next steps. Always leave this document in a state where the agent after you can pick up immediately without asking the user to re-explain the project.
-
-There is a separate macOS MVP under `Foqos - macOS/`. This is a local SwiftUI app inspired by the iOS app; it is not part of the iOS target and does not use Screen Time APIs.
-
-#### Current location and build
-
-- Project: `Foqos - macOS/Foqos - macOS.xcodeproj`
-- Sources: `Foqos - macOS/Foqos - macOS/`
-- Desktop app: `~/Desktop/Foqos.app`
-- Build command:
+You need Xcode 26.5 or later, and macOS 26.3 or later to run it.
 
 ```bash
-cd "Foqos - macOS"
-xcodebuild -project "Foqos - macOS.xcodeproj" \
-  -scheme "Foqos - macOS" \
-  -configuration Debug \
-  -sdk macosx \
-  -derivedDataPath /tmp/FoqosMacBuild \
-  CODE_SIGNING_ALLOWED=NO build
+git clone https://github.com/milomaurer23/foqos-for-mac.git
+cd "foqos-for-mac/Foqos - macOS"
+open "Foqos - macOS.xcodeproj"
 ```
 
-The current MVP includes a SwiftUI dashboard, menu-bar controls, profiles, preset templates, a categorized popular-domain checkbox picker, custom domains, session history, a month-style session calendar, and the Foqos iOS logo as the macOS app icon.
-
-**Bugs fixed in the last session (2026-08-03):**
-- DNS flush was a separate `osascript` call, causing two password dialogs per start/stop — now merged into one combined shell command so only one dialog appears
-- Profiles persisted with `isActive = true` were loaded back as "active" after a crash/relaunch — startup now resets all `isActive` flags
-- No guard against starting a second session while one was already running (easily triggered from the menu bar) — `startSession` now exits immediately if a session is active
-- Settings tab existed in the detail view switch but was unreachable — added to the sidebar nav
-- Calendar day numbers were unreadable on filled (session) circles — session days now render white text
-- "Last 30 days" session count stat ignored calendar month navigation — first metric now updates to show the count for whichever month is displayed in the calendar
-
-**Bugs fixed in session 2026-08-13:**
-- Quitting with a session running left the block in `/etc/hosts` and lost the session. An `AppDelegate` now intercepts quit with Stop Blocking and Quit / Keep Blocking and Quit / Cancel.
-- The active session was memory-only. It's now saved to `active-session.json`, and `ProfileStore.restoreActiveSession()` reconciles it with `/etc/hosts` on launch: it resumes, shows the stale-block alert, or archives the orphaned session to history.
-- `stopSession()` ended the session even when the unblock failed (for example a dismissed password prompt), so the UI said "nothing blocked" while the block was still active. It now keeps the session running if `removeBlocking()` throws.
-- Deleting the selected profile showed the "create your first profile" empty state. `ContentView.resolvedProfile` now falls back to the first profile.
-- The add-domain alert silently dropped invalid input, because an alert can't re-present itself from its own button. It's been replaced with `AddDomainSheet`, which validates live and catches `https://` and paths.
-- There was no way to remove a domain, since `.onDelete` does nothing on macOS here. Each row now has a hover minus button and a right-click Remove option.
-- The live timer counted ticks and lost time during sleep. It's now derived from `startTime`.
-- The session tracker was rebuilt. Days are shaded by minutes focused (5-step green scale plus legend), there are Today / Month / Streak / All-time tiles and a ring on today, the running session counts live, and every stat is bucketed by start date.
-
-#### macOS blocking safety
-
-`HostsManager.swift` writes only a clearly marked section between `# >>> FOQOS BLOCK START <<<` and `# >>> FOQOS BLOCK END <<<` in `/etc/hosts`. Starting a session removes any previous Foqos section and writes the selected domains; stopping removes only that section. Existing non-Foqos hosts entries are preserved. macOS asks for administrator credentials through `osascript` when the file is changed.
-
-Profiles and completed sessions are stored locally as JSON under `~/Library/Application Support/Foqos-macOS/`. The current macOS target intentionally has App Sandbox disabled because it needs to launch the privileged `/etc/hosts` write flow.
-
-#### Next macOS work
-
-1. **Make the current state visible.** The menu bar icon is always `shield.fill` and should change when a session is active. Settings should show the live `/etc/hosts` block status with a Clear button, because the stale-block alert fires only once.
-2. **HostsManager hardening:**
-   - Back up `/etc/hosts` before writing.
-   - Check marker order. `getCurrentlyBlockedDomains` crashes if END comes before START, and `removeExistingFoqosBlock` strips only the first pair.
-   - Make `isValidDomain` ASCII-only with punycode for IDNs. `Character.isLetter` accepts Unicode, and empty labels are silently dropped.
-   - Quote the temp path in the `do shell script` string.
-3. Small cleanup:
-   - Derive `profile.isActive` from `activeProfileId` instead of storing both.
-   - Read the version from the bundle instead of hardcoding "1.0".
-   - Remove the no-op `flushDNSCache()`.
-4. Known limitation, which Milo accepts for now: `/etc/hosts` can't wildcard (for example `*.googlevideo.com`) and doesn't affect tabs that were already open, so a cached YouTube tab can still play videos. A real fix would need an `NEFilterDataProvider` network extension.
-5. **App blocking (next big feature):** Use `NSWorkspace.shared.notificationCenter` to observe `NSWorkspace.didActivateApplicationNotification` and immediately call `.terminate()` on any app whose bundle ID is in the profile's blocked list. This is how [AppJail](https://github.com/devsemih/appjail) works — no special entitlements needed, works on any Mac, no Family Sharing required. **Do NOT attempt the Screen Time / FamilyControls API** — `FamilyActivityPicker` is iOS-only, `ManagedSettings` app shielding requires Mac Catalyst (not a native macOS target), and it requires Family Sharing guardian approval which makes it unsuitable for self-blocking.
-6. Make the month calendar interactive — tap a day to see session details for that date.
-7. Keep the popular-domain catalog current and consider adding more services (LinkedIn, Hulu, Spotify, etc.).
-8. Add macOS unit tests for domain validation, hosts-marker cleanup, calendar aggregation, and profile persistence.
-
-### Prerequisites
-
-- Xcode 15.0+
-- iOS 17.0+ SDK
-- Swift 5.9+
-- Apple Developer account with Screen Time and NFC entitlements
-
-### Build Commands
-
-This project includes a `Makefile` with common development tasks:
+Press **Run** in Xcode, or build from the command line:
 
 ```bash
-make build      # Build the project
-make lint       # Check Swift formatting
-make lint-fix   # Fix Swift formatting
-make check      # Run lint and build
-make clean      # Clean build artifacts
-make help       # Show all commands
+xcodebuild -project "Foqos - macOS.xcodeproj" -scheme "Foqos - macOS" \
+  -configuration Release -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
 ```
 
-Or open the project in Xcode:
+The app ends up in `build/Build/Products/Release/`.
 
-```bash
-git clone https://github.com/awaseem/foqos.git
-cd foqos
-open foqos.xcodeproj
-```
+## Credits
 
-### Project Structure
+Foqos was created by [Ali Waseem](https://github.com/awaseem) as a free, open-source iPhone app blocker that uses NFC and QR codes. This repo is a fork of it, and the original iOS source is still here under `Foqos/` and its extension folders. The iOS README is at [docs/IOS_README.md](docs/IOS_README.md), and the iOS app is on the [App Store](https://apps.apple.com/ca/app/foqos/id6736793117).
 
-```text
-foqos/
-|-- Foqos/                     # Main app target
-|   |-- Views/                 # SwiftUI views
-|   |-- Models/                # SwiftData models and blocking strategies
-|   |-- Components/            # Reusable UI components
-|   |-- Utils/                 # Utility functions and managers
-|   `-- Intents/               # App Intents and Shortcuts
-|-- FoqosWidget/               # Widget and Live Activity extension
-|-- FoqosDeviceMonitor/        # Device Activity monitor extension
-|-- FoqosShieldAction/         # Managed Settings shield action extension
-`-- FoqosShieldConfig/         # Managed Settings shield configuration extension
-```
-
-### Technologies
-
-- SwiftUI
-- SwiftData
-- Family Controls
-- Managed Settings
-- Device Activity
-- Core NFC
-- CodeScanner
-- BackgroundTasks
-- ActivityKit and Live Activities
-- WidgetKit
-- App Intents
+The macOS app in `Foqos - macOS/` is built by [Milo Maurer](https://github.com/milomaurer23).
 
 ## Contributing
 
-Contributions are welcome. Before opening a pull request:
-
-1. Fork the repository and create a focused branch.
-2. Make the change and update documentation when behavior changes.
-3. Run `make lint` or `make lint-fix`.
-4. Run `make build` or `make check` when your local signing setup allows it.
-5. Open a pull request with a clear description of the change.
-
-## Issues and Support
-
-Use [GitHub Issues](https://github.com/awaseem/foqos/issues) for bugs and feature requests.
-
-When reporting a bug, include:
-
-- iOS version
-- Device model
-- Foqos version
-- Steps to reproduce
-- Expected behavior
-- Actual behavior
-- Screenshots or screen recordings when useful
-- Debug output from Settings -> Help -> Debug Mode
+Issues and pull requests are welcome. If you're working on the Mac app, read [docs/MACOS_HANDOFF.md](docs/MACOS_HANDOFF.md) first. It covers the source map, how blocking works, and what's next.
 
 ## License
 
-Foqos is released under the MIT License. See [LICENSE](LICENSE) for details.
-
-## Links
-
-- [Website](https://www.foqos.app/)
-- [App Store](https://apps.apple.com/ca/app/foqos/id6736793117)
-- [GitHub Issues](https://github.com/awaseem/foqos/issues)
-- [Releases](https://github.com/awaseem/foqos/releases)
-- [Support the Project](https://coff.ee/ambitionsoftware)
-
----
-
-<p align="center">
-  Made in Calgary, AB by <a href="https://github.com/awaseem">Ali Waseem</a>.
-</p>
+MIT, same as the original. See [LICENSE](LICENSE).

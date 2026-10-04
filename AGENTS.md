@@ -2,12 +2,12 @@
 
 This file provides guidelines for agentic coding assistants working on the Foqos iOS app codebase and the separate local macOS MVP.
 
-The macOS MVP is documented in the `macOS MVP Handoff` section of `README.md`. Keep iOS and macOS targets separate: the iOS app uses Screen Time APIs, while the macOS MVP uses a marked `/etc/hosts` block.
+The macOS app is documented in `docs/MACOS_HANDOFF.md`. `README.md` is the public, user-facing page for the Mac app; the original iOS README is `docs/IOS_README.md`. Keep iOS and macOS targets separate: the iOS app uses Screen Time APIs, while the macOS MVP uses a marked `/etc/hosts` block.
 
 > **Every agent working on the macOS MVP must do the following before ending a session:**
-> 1. Update the `macOS MVP Handoff` section of `README.md` with what changed, any bugs fixed, and revised next steps.
+> 1. Update `docs/MACOS_HANDOFF.md` with what changed, any bugs fixed, and revised next steps.
 > 2. Rebuild `Foqos.app` and copy it to `~/Desktop/Foqos.app` so the user can double-click to test.
-> 3. Leave the next steps list in `README.md` accurate and prioritized so the next agent can start immediately.
+> 3. Leave the next steps list in `docs/MACOS_HANDOFF.md` accurate and prioritized so the next agent can start immediately.
 
 ## Build & Test Commands
 

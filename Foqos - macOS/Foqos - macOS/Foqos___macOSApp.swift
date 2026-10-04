@@ -14,6 +14,8 @@ struct Foqos_macOSApp: App {
         WindowGroup(id: "main") {
             ContentView()
         }
+        // Tall enough on first launch to show the whole focus tracker without scrolling.
+        .defaultSize(width: 1100, height: 780)
 
         // Outline shield when idle, filled shield while a session is blocking.
         MenuBarExtra {
