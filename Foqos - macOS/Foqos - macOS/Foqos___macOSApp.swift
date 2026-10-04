@@ -11,7 +11,7 @@ struct Foqos_macOSApp: App {
     @StateObject private var store = ProfileStore.shared
 
     var body: some Scene {
-        WindowGroup(id: "main") {
+        WindowGroup("Foqos Mac (Milo's personal build)", id: "main") {
             ContentView()
         }
         // Tall enough on first launch to show the whole focus tracker without scrolling.

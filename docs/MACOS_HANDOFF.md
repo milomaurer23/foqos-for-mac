@@ -1,4 +1,4 @@
-# Foqos for Mac: developer handoff
+# Foqos Mac (Milo's personal build): developer handoff
 
 > **Instructions for the next agent:**
 > Read this whole file before you touch any macOS code. When you finish a session, update it with what you changed, any bugs you fixed, and the revised next steps. Leave it so the agent after you can start without asking Milo to re-explain the project.
@@ -76,6 +76,12 @@ xcodebuild -project "Foqos - macOS.xcodeproj" \
 - The README was rewritten for the Mac app. The original iOS README moved to `docs/IOS_README.md`, and this handoff moved out of the README
 - First public release, **v0.1.0**, on GitHub Releases. The minimum macOS dropped from 26.3 to **14.0** (it compiles clean; it's only been run on macOS 26). `MARKETING_VERSION` is 0.1.0, and Settings reads the version from the bundle
 
+**2026-10-04 (0.1.1)**
+- Renamed to **Foqos Mac (Milo's personal build)**. Ali Waseem ships an official **Foqos for Mac** (since 2026-08-05, in his repo under `FoqosMac/`, released as `mac-v*` tags). It syncs with the iPhone app over iCloud and blocks websites with a system content filter. This build must never look like it competes with that one.
+- The window title is the new name, and the zipped app is `Foqos Mac (personal build).app`, so it never collides with the official `Foqos for Mac.app`
+- Settings → Credits links Ali's repo, his official Mac app and the iPhone app. The Home footer reads "A personal build based on Foqos by Ali Waseem"
+- The README opens with a pointer to the official Mac app and has a comparison table
+
 ## Making a release
 
 The app is ad-hoc signed, not notarized (Milo has no paid Apple Developer Program membership yet), so users go through "Open Anyway" once. Apple Silicon refuses to run a completely unsigned binary, so the ad-hoc signature is required.
@@ -85,10 +91,10 @@ cd "Foqos - macOS"
 xcodebuild -project "Foqos - macOS.xcodeproj" -scheme "Foqos - macOS" -configuration Release \
   -sdk macosx -derivedDataPath /tmp/FoqosMacRelease ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
   CODE_SIGNING_ALLOWED=NO build
-ditto "/tmp/FoqosMacRelease/Build/Products/Release/Foqos - macOS.app" /tmp/release/Foqos.app
-codesign --force --deep --sign - /tmp/release/Foqos.app
-cd /tmp/release && ditto -c -k --sequesterRsrc --keepParent Foqos.app Foqos-for-Mac-X.Y.Z.zip
-gh release create vX.Y.Z Foqos-for-Mac-X.Y.Z.zip --repo milomaurer23/foqos-for-mac
+ditto "/tmp/FoqosMacRelease/Build/Products/Release/Foqos - macOS.app" "/tmp/release/Foqos Mac (personal build).app"
+codesign --force --deep --sign - "/tmp/release/Foqos Mac (personal build).app"
+cd /tmp/release && ditto -c -k --sequesterRsrc --keepParent "Foqos Mac (personal build).app" Foqos-Mac-personal-build-X.Y.Z.zip
+gh release create vX.Y.Z Foqos-Mac-personal-build-X.Y.Z.zip --repo milomaurer23/foqos-for-mac
 ```
 
 Bump `MARKETING_VERSION` in the pbxproj (both configs) first.

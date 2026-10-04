@@ -2,29 +2,45 @@
   <img src="./images/foqos-logo.png" width="120" alt="Foqos app icon">
 </p>
 
-<h1 align="center">Foqos for Mac</h1>
+> [!IMPORTANT]
+> **Looking for the official Foqos for Mac?** Ali Waseem makes one, and it syncs with your iPhone over iCloud.
+> **[Download the official Foqos for Mac](https://github.com/awaseem/foqos/releases)** · [Mac app source](https://github.com/awaseem/foqos/tree/main/FoqosMac) · [Foqos repo](https://github.com/awaseem/foqos)
+
+<h1 align="center">Foqos Mac (Milo's personal build)</h1>
 
 <p align="center">
-  Mac version by <a href="https://github.com/milomaurer23"><b>Milo Maurer</b></a> · based on <a href="https://github.com/awaseem/foqos"><b>Foqos</b></a> by <a href="https://github.com/awaseem"><b>Ali Waseem</b></a>
+  A personal build by <a href="https://github.com/milomaurer23"><b>Milo Maurer</b></a> · based on <a href="https://github.com/awaseem/foqos"><b>Foqos</b></a> by <a href="https://github.com/awaseem"><b>Ali Waseem</b></a>
 </p>
 
 > [!NOTE]
-> **Foqos was created by [Ali Waseem](https://github.com/awaseem).** The idea, the name and the original iPhone app are all his: [github.com/awaseem/foqos](https://github.com/awaseem/foqos). I'm not affiliated with Ali or the official app. This is my own personal project to bring Foqos to the Mac.
+> **Foqos was created by [Ali Waseem](https://github.com/awaseem).** The idea, the name, the iPhone app and the official Mac app are all his. I'm not affiliated with Ali or the official apps. This is my own build, made for how I work on my Mac. It isn't meant to compete with his.
 
 <p align="center">
-  <a href="https://github.com/milomaurer23/foqos-for-mac/releases/latest"><b>⬇ Download Foqos for Mac</b></a><br>
+  <a href="https://github.com/milomaurer23/foqos-for-mac/releases/latest"><b>⬇ Download Milo's personal build</b></a><br>
   <sub>Free · macOS 14 or later · Apple Silicon and Intel</sub>
 </p>
 
 <p align="center">
-  <img src="./docs/screenshots/home.png" width="860" alt="Foqos for Mac home screen with the focus tracker">
+  <img src="./docs/screenshots/home.png" width="860" alt="Foqos Mac (Milo's personal build) home screen with the focus tracker">
 </p>
 
 ## Why I made this
 
-I've used and enjoyed Foqos on my phone for a while. Most of my actual work happens on my computer, though, and that's where I lose the most time to a stray tab. I wanted the same kind of focus session on my Mac, so I built one. This is me filling that gap for myself, not a replacement for the original.
+I've used and enjoyed Foqos on my phone for a while. Most of my actual work happens on my computer, though, and that's where I lose the most time to a stray tab. I wanted the same kind of focus session on my Mac, so I built one. This is me filling that gap for myself, not a replacement for the original. I started it before Ali released his official Mac app, and I keep it as my own take.
 
 Milo
+
+## How this differs from the official Mac app
+
+| | Official Foqos for Mac (Ali) | This personal build |
+|---|---|---|
+| Where you start a session | On your iPhone. The Mac follows over iCloud | On the Mac itself |
+| Website blocking | A built-in macOS content filter | A marked block in `/etc/hosts` |
+| Apps | Blocked on your iPhone. The Mac syncs website rules | Quits blocked Mac apps during a session |
+| Focus history | Insights in the iPhone app | Calendar tracker and history on the Mac |
+| Install | Signed and notarized, updates itself | One-time "Open Anyway" step |
+
+If you use Foqos on your iPhone, start with [Ali's official Mac app](https://github.com/awaseem/foqos/releases).
 
 ## What it does
 
@@ -56,10 +72,10 @@ It's a roadblock, not a jail. A tab that was already open before the session sta
 ## Install
 
 1. [Download the latest `.zip`](https://github.com/milomaurer23/foqos-for-mac/releases/latest) and double-click it to unzip.
-2. Drag **Foqos.app** into your **Applications** folder.
+2. Drag **Foqos Mac (personal build).app** into your **Applications** folder. It has a different name from the official app, so you can have both.
 3. **The first time you open it,** macOS will warn that it can't verify the app. That's because this is a free personal project and isn't signed through Apple's paid developer program yet. To open it anyway:
-   - **macOS 15 or later:** double-click Foqos, click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-   - **macOS 14:** right-click Foqos, choose **Open**, then click **Open** again.
+   - **macOS 15 or later:** double-click the app, click **Done**, then go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
+   - **macOS 14:** right-click the app, choose **Open**, then click **Open** again.
 
 You only have to do this once. You'll need to be an admin on your Mac, because blocking sites asks for your password.
 
